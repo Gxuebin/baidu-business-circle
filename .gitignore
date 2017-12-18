@@ -1,0 +1,10 @@
+# node
+node_modules/
+data/
+
+# ts complied js
+routes/*.js*
+routes/model/*.js*
+
+# vscode
+.vscode/

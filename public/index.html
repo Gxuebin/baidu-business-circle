@@ -1,0 +1,131 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style type="text/css">
+        #container {
+            font-size: 12px;
+            margin: 5px 0;
+        }
+    </style>
+    <title>
+        城市列表显示示例</title>
+
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=TPfn66iS5a7QWwFrI6b8qArKPFhI4Zjj"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/library/CityList/1.4/src/CityList_min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+</head>
+
+<body>
+    <div id="container"></div>
+    <div style="width:520px;height:340px;border:1px solid gray" id="map_container"></div>
+</body>
+
+</html>
+<script type="text/javascript">
+    // 新创建地图
+    var map = new BMap.Map("map_container");
+    map.centerAndZoom(new BMap.Point(121.478125, 31.229649), 12);
+
+    var cityList = new BMapLib.CityList({
+        container: 'container',
+        map: map
+    });
+
+    var business_list = [
+        {
+            distinct: "黄陂区", 
+            business: ["六指店","罗汉寺","祁家湾","前川","滠口","天河"]
+        },{
+            distinct: "江汉区",
+            business: ["民族","前进","唐家墩","武广","西北湖","北湖","常青路","汉兴","民权","民意","水塔","万松","王家墩","友谊路","中山公园",]
+        },{
+            distinct: "新洲区",
+            business: ["旧街","李集","潘塘","三店","双柳","汪集","阳逻","邾城"]
+        },{
+            distinct: "江夏区",
+            business: ["流芳","乌龙泉","郑店","纸坊"]
+        },{
+            distinct: "江岸区",
+            business: ["二七","解放公园","客运港","竹叶山","车站","谌家矶","大智","岱山","丹水池","后湖","花桥","建设大道","江汉路","江滩","劳动","球场","球场街","三阳路","四唯","台北路","西马","新村","一元","永清"]
+        },{
+            distinct: "东西湖区",
+            business: ["柏泉","长青","常青花园","慈惠墩","东山","荷包湖","金银湖","径河","李家墩","三店","辛安渡","新沟","走马岭"]
+        },{
+            distinct: "汉南区",
+            business: ["纱帽"]
+        },{
+            distinct: "青山区",
+            business: ["白玉山","厂前","钢花村","工人村","和平大道","红钢城","红卫路","建设二路","建设七路","南干渠","新沟桥","冶金"]
+        },{
+            distinct: "洪山区",
+            business: ["广埠屯","街道口","鲁巷","徐东","卓刀泉","白沙洲","陈家湾","葛化","关山","光谷","红旗","花山","珞南","珞狮南路","南湖","武东","张家湾","左岭"]
+        },{
+            distinct: "蔡甸区",
+            business: ["蔡甸","大集","永安","奓山","张湾","侏儒"]
+        },{
+            distinct: "武昌区",
+            business: ["积玉桥","水果湖","武昌火车站","武泰闸","小东门","余家头","阅马场","中北路","中南路","大东门","东湖路","黄鹤楼","粮道街","珞珈山","首义路","司门口","武珞路","新河","徐家棚","杨园","友谊大道","紫阳路"]
+        },{
+            distinct: "硚口区",
+            business: ["汉正街","硚口路","宗关","满春","宝丰","崇仁","韩家墩","汉水桥","汉中","六角亭","荣华","易家墩"]
+        },{
+            distinct: "汉阳区",
+            business: ["鹦鹉","月湖","钟家村","翠微","建桥","江汉二桥","琴断口","晴川","王家湾","五里墩","洲头"]
+        }
+    ]
+
+    cityList.getSubAreaList(218, async function (json) {
+        console.log('城市列表');
+        // 循环查找每个区
+        var all_business = [];
+        for (let i = 0; i < business_list.length; i++) {
+            const element = business_list[i];
+            all_business = all_business.concat(element.business)
+        }
+        for (let j = 0; j < all_business.length; j++) {
+            const element = all_business[j];
+            console.log(element, "商圈数据");
+            await new Promise(function (resolve, reject) {
+                cityList.getBusiness(element, async function (json) {
+                    await new Promise(function (resolve, reject) {
+                        $.ajax({
+                            url: "/upload/businessCircle",
+                            type: "POST",
+                            data: {
+                                body: JSON.stringify({
+                                    name: element,
+                                    business: json,
+                                    city: "武汉市"
+                                })
+                            },
+                            success: function (body) {
+                                resolve();
+                            },
+                            error: function () {
+                                reject();
+                            }
+                        })
+                    })
+                    resolve();
+                })
+            })
+            await new Promise(function (resolve, reject) {
+                setTimeout(function () {
+                    resolve()
+                }, 1000)
+            })
+        }
+    });
+
+    cityList.getBusiness('街道口', function (json) {
+        console.log('商圈');
+        console.log(json);
+    });
+
+    cityList.addEventListener('cityclick', function (e) {
+        console.log(e);
+    });
+
+</script>
