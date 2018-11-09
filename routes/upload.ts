@@ -1,5 +1,5 @@
 import * as express from "express";
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import * as json2csv from "json2csv";
 import { CitySubArea } from "./model/CitySubArea";
 import { BusinessCircle } from "./model/BusinessCircle";
@@ -12,12 +12,21 @@ import { BusinessCircle } from "./model/BusinessCircle";
  */
 function postCitySubArea(req: express.Request, res: express.Response, next: express.NextFunction) {
     var data: CitySubArea = JSON.parse(req.body.body);
-    json2csv({ data: data.sub }, (err, csv) => {
-        if (err) console.log(err);
-        else {
-            fs.writeFile("data/CitySubArea.csv", csv, (err) => {
+    fs.ensureDir("data", (err) => {
+        if (err) {
+            res.json({
+                err: "无法创建文件夹",
+                msg: err.message
+            })
+        } else {
+            json2csv({ data: data.sub }, (err, csv) => {
                 if (err) console.log(err);
-                else console.log("城市数据写完文件完成");
+                else {
+                    fs.writeFile("data/CitySubArea.csv", csv, (err) => {
+                        if (err) console.log(err);
+                        else console.log("城市数据写完文件完成");
+                    })
+                }
             })
         }
     })
@@ -31,14 +40,24 @@ function postCitySubArea(req: express.Request, res: express.Response, next: expr
  */
 function postBusinessCircle(req: express.Request, res: express.Response, next: express.NextFunction) {
     var data: {name: string, city: string, business: BusinessCircle[]} = JSON.parse(req.body.body);
-    fs.writeFile(`data/BusinessCircle/${data.name}.json`, JSON.stringify({
-        name: data.name,
-        business: data.business.filter(x => x.city === data.city)
-    }), (err) => {
-        if (err) console.log(err);
-        else {
-            console.log(`${data.name}写文件完成`);
-            res.send("success")
+    var dir = "data/BusinessCircle";
+    fs.ensureDir(dir, (err) => {
+        if (err) {
+            res.json({
+                err: "无法创建文件夹",
+                msg: err.message
+            })
+        } else {
+            fs.writeFile(`${dir}/${data.name}.json`, JSON.stringify({
+                name: data.name,
+                business: data.business.filter(x => x.city === data.city)
+            }), (err) => {
+                if (err) console.log(err);
+                else {
+                    console.log(`${data.name}写文件完成`);
+                    res.send("success")
+                }
+            })
         }
     })
 }
